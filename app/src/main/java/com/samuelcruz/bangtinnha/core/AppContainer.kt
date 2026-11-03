@@ -3,6 +3,7 @@ package com.samuelcruz.bangtinnha.core
 import android.content.Context
 import com.samuelcruz.bangtinnha.core.backup.Maintenance
 import com.samuelcruz.bangtinnha.core.db.AppDatabase
+import com.samuelcruz.bangtinnha.ui.UiData
 import com.samuelcruz.bangtinnha.core.net.Http
 import com.samuelcruz.bangtinnha.core.notify.Alerts
 import com.samuelcruz.bangtinnha.core.notify.Notifications
@@ -53,4 +54,7 @@ class AppContainer(context: Context) {
     )
 
     val maintenance = Maintenance(app, database, settings)
+
+    /** Shared screen data (see UiData); created on first use, so background workers never start it. */
+    val ui by lazy { UiData(database, settings) }
 }

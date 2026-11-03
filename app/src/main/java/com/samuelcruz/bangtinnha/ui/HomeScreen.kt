@@ -3,7 +3,6 @@ package com.samuelcruz.bangtinnha.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,7 +10,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
@@ -50,7 +51,7 @@ private val weekdays = listOf("Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm"
 @Composable
 fun HomeScreen(onOpen: (String) -> Unit) {
     val c = appContainer()
-    val statuses by c.database.sourceStatusDao().observeAll().collectAsStateWithLifecycle(emptyList())
+    val statuses by c.ui.statuses.collectAsStateWithLifecycle()
     val status = statuses.associateBy { it.sourceId }
     val scope = rememberCoroutineScope()
     var refreshing by remember { mutableStateOf(false) }
@@ -69,42 +70,33 @@ fun HomeScreen(onOpen: (String) -> Unit) {
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
-        LazyColumn(
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        // Six cards only: a plain scrolling Column keeps them all composed, so scrolling never rebuilds a card.
+        Column(
             verticalArrangement = Arrangement.spacedBy(14.dp),
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 8.dp),
         ) {
-            item { Greeting(onSettings = { onOpen(Routes.SETTINGS) }) }
-            item { WeatherHero(status["weather"], c.weather.refreshInterval, onClick = { onOpen(Routes.WEATHER) }) }
-            item {
-                ModuleCard("💱", "Tỷ giá Vietcombank", Palette.fx, status["fx"], c.fx.refreshInterval, { onOpen(Routes.FX) }) {
-                    FxCardContent()
-                }
+            Greeting(onSettings = { onOpen(Routes.SETTINGS) })
+            WeatherHero(status["weather"], c.weather.refreshInterval, onClick = { onOpen(Routes.WEATHER) })
+            ModuleCard("💱", "Tỷ giá Vietcombank", Palette.fx, status["fx"], c.fx.refreshInterval, { onOpen(Routes.FX) }) {
+                FxCardContent()
             }
-            item {
-                ModuleCard("🥇", "Giá vàng PNJ", Palette.gold, status["gold"], c.gold.refreshInterval, { onOpen(Routes.GOLD) }) {
-                    GoldCardContent()
-                }
+            ModuleCard("🥇", "Giá vàng PNJ", Palette.gold, status["gold"], c.gold.refreshInterval, { onOpen(Routes.GOLD) }) {
+                GoldCardContent()
             }
-            item {
-                ModuleCard("⛽", "Giá xăng dầu", Palette.fuel, status["fuel"], c.fuel.refreshInterval, { onOpen(Routes.FUEL) }) {
-                    FuelCardContent()
-                }
+            ModuleCard("⛽", "Giá xăng dầu", Palette.fuel, status["fuel"], c.fuel.refreshInterval, { onOpen(Routes.FUEL) }) {
+                FuelCardContent()
             }
-            item {
-                ModuleCard("⚡", "Lịch cúp điện", Palette.power, status["power"], c.power.refreshInterval, { onOpen(Routes.POWER) }) {
-                    PowerCardContent()
-                }
+            ModuleCard("⚡", "Lịch cúp điện", Palette.power, status["power"], c.power.refreshInterval, { onOpen(Routes.POWER) }) {
+                PowerCardContent()
             }
-            item {
-                Text(
-                    "Kéo xuống để cập nhật tất cả",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(vertical = 8.dp).fillParentMaxWidth(),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                )
-            }
+            Text(
+                "Kéo xuống để cập nhật tất cả",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
         }
     }
     }

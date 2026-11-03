@@ -3,8 +3,10 @@ package com.samuelcruz.bangtinnha.core.source
 import com.samuelcruz.bangtinnha.core.db.SourceStatus
 import com.samuelcruz.bangtinnha.core.db.SourceStatusDao
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -31,10 +33,15 @@ class RefreshCoordinator(
 
     suspend fun refreshOne(id: String) = run(sources.filter { it.id == id })
 
-    private suspend fun run(list: List<DataSource>): Map<String, Result<RefreshResult>> = mutex.withLock {
+    /** Parsing runs on a background thread even when a screen starts the refresh, so the UI never stutters. */
+    private suspend fun run(list: List<DataSource>): Map<String, Result<RefreshResult>> = withContext(Dispatchers.Default) {
+        mutex.withLock { runLocked(list) }
+    }
+
+    private suspend fun runLocked(list: List<DataSource>): Map<String, Result<RefreshResult>> {
         val results = list.associate { source -> source.id to refreshSafely(source) }
         if (list.isNotEmpty()) runCatching { afterRefresh() }
-        results
+        return results
     }
 
     private suspend fun refreshSafely(source: DataSource): Result<RefreshResult> {

@@ -17,8 +17,20 @@ android {
         applicationId = "com.samuelcruz.bangtinnha"
         minSdk = 26
         targetSdk = 37
-        versionCode = 4
-        versionName = "1.2.1"
+        versionCode = 5
+        versionName = "1.2.2"
+    }
+
+    buildTypes {
+        // The APK the family installs. Debug builds run Compose without optimisations and feel janky; release is
+        // shrunk and optimised by R8. It is signed with the same debug key as before, so it installs over earlier
+        // APKs without uninstalling (switch to a private release key later if wanted).
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("debug")
+        }
     }
 
     buildFeatures {

@@ -51,8 +51,8 @@ private fun price(v: Long?) = v?.let(::formatHundredths) ?: "–"
 @Composable
 fun FxCardContent() {
     val c = appContainer()
-    val settings by c.settings.settings.collectAsStateWithLifecycle(AppSettings())
-    val latest by c.database.fxDao().observeLatest().collectAsStateWithLifecycle(emptyList())
+    val settings by c.ui.settings.collectAsStateWithLifecycle()
+    val latest by c.ui.fxLatest.collectAsStateWithLifecycle()
     val shown = latest.filter { it.code in settings.currencies }
     if (shown.isEmpty()) return Text("Chưa có dữ liệu tỷ giá", style = MaterialTheme.typography.bodyMedium)
     val main = shown.firstOrNull { it.code == "USD" } ?: shown.first()
@@ -88,8 +88,8 @@ fun FxCardContent() {
 @Composable
 fun FxDetailScreen(onBack: () -> Unit) {
     val c = appContainer()
-    val settings by c.settings.settings.collectAsStateWithLifecycle(AppSettings())
-    val latest by c.database.fxDao().observeLatest().collectAsStateWithLifecycle(emptyList())
+    val settings by c.ui.settings.collectAsStateWithLifecycle()
+    val latest by c.ui.fxLatest.collectAsStateWithLifecycle()
     val shown = latest.filter { it.code in settings.currencies }
     var selected by remember { mutableStateOf("USD") }
     val history by remember(selected) { c.database.fxDao().observeHistory(selected) }.collectAsStateWithLifecycle(emptyList())

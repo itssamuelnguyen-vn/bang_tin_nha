@@ -60,10 +60,10 @@ private fun hourOf(isoTime: String) = isoTime.substring(11, 13).toIntOrNull() ?:
 /** The big weather card at the top of the dashboard; its gradient follows the sky. */
 @Composable
 fun WeatherHero(status: SourceStatus?, interval: Duration, onClick: () -> Unit) {
-    val dao = appContainer().database.weatherDao()
-    val current by dao.observeCurrent().collectAsStateWithLifecycle(null)
-    val daily by dao.observeDaily().collectAsStateWithLifecycle(emptyList())
-    val hourly by dao.observeHourly().collectAsStateWithLifecycle(emptyList())
+    val ui = appContainer().ui
+    val current by ui.weatherCurrent.collectAsStateWithLifecycle()
+    val daily by ui.weatherDaily.collectAsStateWithLifecycle()
+    val hourly by ui.weatherHourly.collectAsStateWithLifecycle()
     val w = current
     val colors = Palette.weather(w?.weatherCode ?: 1, w?.observedAt?.let(::hourOf) ?: 12)
     val f = freshness(status, interval)
@@ -146,10 +146,10 @@ private fun Stat(icon: String, value: String, modifier: Modifier, dot: Color? = 
 
 @Composable
 fun WeatherDetailScreen(onBack: () -> Unit) {
-    val dao = appContainer().database.weatherDao()
-    val current by dao.observeCurrent().collectAsStateWithLifecycle(null)
-    val daily by dao.observeDaily().collectAsStateWithLifecycle(emptyList())
-    val hourly by dao.observeHourly().collectAsStateWithLifecycle(emptyList())
+    val ui = appContainer().ui
+    val current by ui.weatherCurrent.collectAsStateWithLifecycle()
+    val daily by ui.weatherDaily.collectAsStateWithLifecycle()
+    val hourly by ui.weatherHourly.collectAsStateWithLifecycle()
     val colors = Palette.weather(current?.weatherCode ?: 1, current?.observedAt?.let(::hourOf) ?: 12)
     SubScreen(
         title = current?.let { "${it.temperature.toInt()}° · ${weatherOf(it.weatherCode).second}" } ?: "Thời tiết",

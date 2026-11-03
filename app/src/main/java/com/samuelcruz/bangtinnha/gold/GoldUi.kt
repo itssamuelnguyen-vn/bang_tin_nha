@@ -49,8 +49,8 @@ fun millions(dong: Long): String = "%.2f".format(dong / 1_000_000.0).replace('.'
 @Composable
 fun GoldCardContent() {
     val c = appContainer()
-    val settings by c.settings.settings.collectAsStateWithLifecycle(AppSettings())
-    val latest by c.database.goldDao().observeLatest().collectAsStateWithLifecycle(emptyList())
+    val settings by c.ui.settings.collectAsStateWithLifecycle()
+    val latest by c.ui.goldLatest.collectAsStateWithLifecycle()
     val shown = latest.chosen(settings)
     if (shown.isEmpty()) return Text("Chưa có dữ liệu giá vàng", style = MaterialTheme.typography.bodyMedium)
     shown.forEachIndexed { i, g ->
@@ -84,7 +84,7 @@ fun GoldCardContent() {
 @Composable
 fun GoldDetailScreen(onBack: () -> Unit) {
     val c = appContainer()
-    val latest by c.database.goldDao().observeLatest().collectAsStateWithLifecycle(emptyList())
+    val latest by c.ui.goldLatest.collectAsStateWithLifecycle()
     var selected by remember { mutableStateOf<Long?>(null) }
     val productId = selected ?: latest.firstOrNull()?.productId
     val history by remember(productId) { c.database.goldDao().observeHistory(productId ?: -1) }.collectAsStateWithLifecycle(emptyList())

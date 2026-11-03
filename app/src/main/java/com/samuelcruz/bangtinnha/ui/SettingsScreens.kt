@@ -60,7 +60,7 @@ private data class SettingsEntry(val emoji: String, val colors: ModuleColors, va
 
 @Composable
 fun SettingsScreen(onBack: () -> Unit, onOpen: (String) -> Unit) {
-    val settings by appContainer().settings.settings.collectAsStateWithLifecycle(AppSettings())
+    val settings by appContainer().ui.settings.collectAsStateWithLifecycle()
     val violet = Palette.settings
     val entries = listOf(
         SettingsEntry("📍", Palette.weather(1, 12), "Địa điểm thời tiết", settings.locationName, Routes.LOCATION),
@@ -167,8 +167,8 @@ private fun CheckList(options: List<Pair<String, String>>, selected: Set<String>
 fun CurrenciesScreen(onBack: () -> Unit) {
     val c = appContainer()
     val scope = rememberCoroutineScope()
-    val settings by c.settings.settings.collectAsStateWithLifecycle(AppSettings())
-    val codes by c.database.fxDao().observeCodes().collectAsStateWithLifecycle(emptyList())
+    val settings by c.ui.settings.collectAsStateWithLifecycle()
+    val codes by remember { c.database.fxDao().observeCodes() }.collectAsStateWithLifecycle(emptyList())
     val options = (codes.ifEmpty { listOf("USD", "EUR", "JPY", "CNY", "KRW") }).map { it to it }
     SubScreen("Ngoại tệ hiển thị", onBack) { modifier ->
         Column(modifier) {
@@ -182,8 +182,8 @@ fun CurrenciesScreen(onBack: () -> Unit) {
 fun FuelProductsScreen(onBack: () -> Unit) {
     val c = appContainer()
     val scope = rememberCoroutineScope()
-    val settings by c.settings.settings.collectAsStateWithLifecycle(AppSettings())
-    val products by c.database.fuelDao().observeProducts().collectAsStateWithLifecycle(emptyList())
+    val settings by c.ui.settings.collectAsStateWithLifecycle()
+    val products by remember { c.database.fuelDao().observeProducts() }.collectAsStateWithLifecycle(emptyList())
     SubScreen("Xăng dầu hiển thị", onBack) { modifier ->
         Column(modifier) {
             Text(
@@ -199,8 +199,8 @@ fun FuelProductsScreen(onBack: () -> Unit) {
 fun GoldProductsScreen(onBack: () -> Unit) {
     val c = appContainer()
     val scope = rememberCoroutineScope()
-    val settings by c.settings.settings.collectAsStateWithLifecycle(AppSettings())
-    val products by c.database.goldDao().observeProducts().collectAsStateWithLifecycle(emptyList())
+    val settings by c.ui.settings.collectAsStateWithLifecycle()
+    val products by remember { c.database.goldDao().observeProducts() }.collectAsStateWithLifecycle(emptyList())
     SubScreen("Vàng hiển thị", onBack, Palette.gold) { modifier ->
         Column(modifier) {
             if (products.isEmpty()) Text("Danh sách loại vàng sẽ có sau lần tải giá đầu tiên.", Modifier.padding(16.dp))
@@ -215,7 +215,7 @@ fun NotificationsScreen(onBack: () -> Unit) {
     val c = appContainer()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val s by c.settings.settings.collectAsStateWithLifecycle(AppSettings())
+    val s by c.ui.settings.collectAsStateWithLifecycle()
     var picking by remember { mutableStateOf(false) }
 
     @Composable
@@ -319,7 +319,7 @@ fun BatteryScreen(onBack: () -> Unit) {
 fun SourceStatusScreen(onBack: () -> Unit) {
     val c = appContainer()
     val scope = rememberCoroutineScope()
-    val statuses by c.database.sourceStatusDao().observeAll().collectAsStateWithLifecycle(emptyList())
+    val statuses by c.ui.statuses.collectAsStateWithLifecycle()
     val byId = statuses.associateBy { it.sourceId }
     SubScreen("Trạng thái nguồn", onBack) { modifier ->
         LazyColumn(modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

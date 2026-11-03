@@ -69,8 +69,8 @@ private fun FuelRow(p: FuelLatest) {
 @Composable
 fun FuelCardContent() {
     val c = appContainer()
-    val settings by c.settings.settings.collectAsStateWithLifecycle(AppSettings())
-    val latest by c.database.fuelDao().observeLatest().collectAsStateWithLifecycle(emptyList())
+    val settings by c.ui.settings.collectAsStateWithLifecycle()
+    val latest by c.ui.fuelLatest.collectAsStateWithLifecycle()
     val shown = latest.chosen(settings)
     if (shown.isEmpty()) return Text("Chưa có dữ liệu giá xăng", style = MaterialTheme.typography.bodyMedium)
     shown.forEach { FuelRow(it) }
@@ -88,8 +88,8 @@ fun FuelCardContent() {
 @Composable
 fun FuelDetailScreen(onBack: () -> Unit) {
     val c = appContainer()
-    val settings by c.settings.settings.collectAsStateWithLifecycle(AppSettings())
-    val latest by c.database.fuelDao().observeLatest().collectAsStateWithLifecycle(emptyList())
+    val settings by c.ui.settings.collectAsStateWithLifecycle()
+    val latest by c.ui.fuelLatest.collectAsStateWithLifecycle()
     val shown = latest.chosen(settings)
     var selected by remember { mutableStateOf<Long?>(null) }
     val productId = selected ?: shown.firstOrNull()?.productId

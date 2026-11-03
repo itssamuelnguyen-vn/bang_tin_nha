@@ -15,9 +15,13 @@ Gradle runs on Windows (from WSL call it through PowerShell). JDK: `D:\dev\andro
 ```powershell
 $env:JAVA_HOME='D:\dev\android-sdk\jbr'
 .\gradlew.bat testDebugUnitTest      # parser + coordinator tests (JVM)
-.\gradlew.bat assembleDebug          # app\build\outputs\apk\debug\app-debug.apk
-adb install -r app\build\outputs\apk\debug\app-debug.apk
+.\gradlew.bat assembleRelease        # app\build\outputs\apk\release\app-release.apk (what the family installs)
+adb install -r app\build\outputs\apk\release\app-release.apk
 ```
+
+Ship the **release** APK: debug builds run Compose unoptimised and feel janky. Release is shrunk by R8
+(`app/proguard-rules.pro`) and signed with the local debug key, so it installs over earlier APKs; losing
+`~/.android/debug.keystore` means the next APK needs an uninstall.
 
 From WSL: `powershell.exe -NoProfile -Command "$env:JAVA_HOME='D:\dev\android-sdk\jbr'; cd D:\dev\customized_apps\bang_tin_nha; .\gradlew.bat assembleDebug"`.
 PowerShell pipelines through `Select-String` can exit 1 even when Gradle succeeds: read the output.
@@ -48,6 +52,10 @@ widget/      Glance dashboard widget
 - **Error isolation**: each source is wrapped (try/catch, cancellation rethrown); failures go to `source_status`
   (`last_success_at`, `last_attempt_at`, `last_error`, `last_summary`). Cards show the error on that card only, and
   "Chưa cập nhật …" when data is older than 2 × the interval. Settings → "Trạng thái nguồn" shows details.
+- Refresh runs on `Dispatchers.Default` inside the coordinator (pull-to-refresh starts on the main thread).
+- Screens read data through `ui/UiData.kt` (shared `StateFlow`s kept for a minute after the last collector), never
+  by calling a DAO `observe…()` inside a composable: that re-creates the flow on recomposition and makes every card
+  start empty on each visit. The dashboard is a plain scrolling `Column` (six cards), not a `LazyColumn`.
 - After every refresh run: `Alerts.checkUrgent()` and the widget update. `RefreshWorker` also calls `checkUrgent()`
   each hour without a refresh, because "power cut within 24 h" depends on the clock, not on new data.
 

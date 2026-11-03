@@ -83,9 +83,9 @@ private fun PowerOutage.countdown(): String {
 @Composable
 fun PowerCardContent() {
     val c = appContainer()
-    val settings by c.settings.settings.collectAsStateWithLifecycle(AppSettings())
+    val settings by c.ui.settings.collectAsStateWithLifecycle()
     val now = remember { System.currentTimeMillis() }
-    val upcoming by c.database.powerDao().observeUpcoming(now).collectAsStateWithLifecycle(emptyList())
+    val upcoming by c.ui.powerUpcoming.collectAsStateWithLifecycle()
     val mine = upcoming.forMyArea(settings, System.currentTimeMillis())
     when {
         settings.powerUnits.isEmpty() ->
@@ -135,9 +135,9 @@ private fun Notice(icon: String, text: String, background: Color) {
 @Composable
 fun PowerDetailScreen(onBack: () -> Unit) {
     val c = appContainer()
-    val settings by c.settings.settings.collectAsStateWithLifecycle(AppSettings())
+    val settings by c.ui.settings.collectAsStateWithLifecycle()
     val now = remember { System.currentTimeMillis() }
-    val upcoming by c.database.powerDao().observeUpcoming(now).collectAsStateWithLifecycle(emptyList())
+    val upcoming by c.ui.powerUpcoming.collectAsStateWithLifecycle()
     var onlyMine by remember { mutableStateOf(true) }
     val shown = if (onlyMine) upcoming.forMyArea(settings, now) else upcoming
     SubScreen(
@@ -181,7 +181,7 @@ fun PowerDetailScreen(onBack: () -> Unit) {
 fun PowerSettingsScreen(onBack: () -> Unit) {
     val c = appContainer()
     val scope = rememberCoroutineScope()
-    val settings by c.settings.settings.collectAsStateWithLifecycle(AppSettings())
+    val settings by c.ui.settings.collectAsStateWithLifecycle()
     var companies by remember { mutableStateOf<List<PowerUnit>>(emptyList()) }
     var units by remember { mutableStateOf<List<PowerUnit>>(emptyList()) }
     var error by remember { mutableStateOf<String?>(null) }
