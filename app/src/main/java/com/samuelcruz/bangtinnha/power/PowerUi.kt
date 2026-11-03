@@ -1,6 +1,17 @@
 package com.samuelcruz.bangtinnha.power
 
 import androidx.compose.foundation.clickable
+import com.samuelcruz.bangtinnha.ui.Tile
+import com.samuelcruz.bangtinnha.ui.Palette
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -12,7 +23,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -58,18 +68,43 @@ fun PowerCardContent() {
     val upcoming by c.database.powerDao().observeUpcoming(now).collectAsStateWithLifecycle(emptyList())
     val mine = upcoming.forMyArea(settings, System.currentTimeMillis())
     when {
-        settings.powerUnits.isEmpty() -> Text("Chọn điện lực trong Cài đặt để xem lịch cúp điện.")
-        mine.isEmpty() -> Text(
+        settings.powerUnits.isEmpty() ->
+            Notice("🛠️", "Chọn điện lực trong Cài đặt để xem lịch cúp điện", MaterialTheme.colorScheme.surfaceContainerHigh)
+        mine.isEmpty() -> Notice(
+            "✅",
             if (settings.powerKeywords.isEmpty()) "Không có lịch cúp điện sắp tới" else "Khu vực của bạn không có lịch cúp điện sắp tới",
-            style = MaterialTheme.typography.bodyMedium,
+            Palette.ok.copy(alpha = 0.14f),
         )
         else -> {
-            Text("${mine.size} lịch sắp tới", fontWeight = FontWeight.Bold)
-            mine.take(2).forEach {
-                Text("⚡ ${it.timeText()}", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
-                Text(it.area.lines().first(), style = MaterialTheme.typography.bodySmall, maxLines = 2)
+            val next = mine.first()
+            Column(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Palette.power.gradient).padding(16.dp),
+            ) {
+                Text("SẮP CÚP ĐIỆN", color = Color.White.copy(alpha = 0.85f), style = MaterialTheme.typography.labelMedium)
+                Text(next.timeText(), color = Color.White, style = MaterialTheme.typography.titleLarge)
+                Text(next.area.lines().first(), color = Color.White, style = MaterialTheme.typography.bodyMedium, maxLines = 2)
+            }
+            if (mine.size > 1) {
+                Text(
+                    "và ${mine.size - 1} lịch khác",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Palette.power.accent,
+                    modifier = Modifier.padding(top = 10.dp, start = 4.dp),
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun Notice(icon: String, text: String, background: Color) {
+    Row(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(background).padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(icon, fontSize = 22.sp)
+        Spacer(Modifier.width(10.dp))
+        Text(text, style = MaterialTheme.typography.bodyMedium)
     }
 }
 
@@ -81,32 +116,37 @@ fun PowerDetailScreen(onBack: () -> Unit) {
     val upcoming by c.database.powerDao().observeUpcoming(now).collectAsStateWithLifecycle(emptyList())
     var onlyMine by remember { mutableStateOf(true) }
     val shown = if (onlyMine) upcoming.forMyArea(settings, now) else upcoming
-    SubScreen("Lịch cúp điện", onBack) { modifier ->
-        LazyColumn(modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    SubScreen(
+        "Lịch cúp điện",
+        onBack,
+        Palette.power,
+        subtitle = settings.powerUnits.joinToString { it.name }.ifEmpty { "Chưa chọn điện lực" },
+    ) { modifier ->
+        LazyColumn(modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             item {
-                Text(
-                    "Điện lực: " + settings.powerUnits.joinToString { it.name }.ifEmpty { "chưa chọn" },
-                    style = MaterialTheme.typography.bodySmall,
-                )
                 if (settings.powerKeywords.isNotEmpty()) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         FilterChip(selected = onlyMine, onClick = { onlyMine = true }, label = { Text("Khu vực của tôi") })
-                        FilterChip(selected = !onlyMine, onClick = { onlyMine = false }, label = { Text("Tất cả") })
+                        FilterChip(selected = !onlyMine, onClick = { onlyMine = false }, label = { Text("Tất cả (${upcoming.size})") })
                     }
                 }
-                if (shown.isEmpty()) Text("Không có lịch ngừng cung cấp điện sắp tới.", modifier = Modifier.padding(vertical = 16.dp))
+                if (shown.isEmpty()) Notice("✅", "Không có lịch ngừng cung cấp điện sắp tới.", Palette.ok.copy(alpha = 0.14f))
             }
             items(shown) { o ->
-                Card(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(12.dp)) {
-                        Text("⚡ ${o.timeText()}", fontWeight = FontWeight.Bold)
-                        Text(o.area, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
-                        if (o.reason.isNotEmpty()) Text("Lý do: ${o.reason}", style = MaterialTheme.typography.bodySmall)
-                        Text(o.unitName, style = MaterialTheme.typography.bodySmall)
+                Tile {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(10.dp).clip(CircleShape).background(Palette.power.accent))
+                        Spacer(Modifier.width(8.dp))
+                        Text(o.timeText(), style = MaterialTheme.typography.titleMedium)
                     }
+                    Text(o.area, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
+                    if (o.reason.isNotEmpty()) {
+                        Text("Lý do: ${o.reason}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Text(o.unitName, style = MaterialTheme.typography.labelSmall, color = Palette.power.accent)
                 }
             }
-            item { Spacer(Modifier.padding(bottom = 24.dp)) }
+            item { Spacer(Modifier.padding(bottom = 32.dp)) }
         }
     }
 }
@@ -130,7 +170,7 @@ fun PowerSettingsScreen(onBack: () -> Unit) {
         runCatching { c.power.fetchUnits(settings.powerCompany) }.onSuccess { units = it }.onFailure { error = it.message }
     }
 
-    SubScreen("Khu vực cúp điện", onBack) { modifier ->
+    SubScreen("Khu vực cúp điện", onBack, Palette.power) { modifier ->
         LazyColumn(modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
             item {
                 error?.let { Text("Không tải được danh sách từ EVNSPC: $it", color = MaterialTheme.colorScheme.error) }

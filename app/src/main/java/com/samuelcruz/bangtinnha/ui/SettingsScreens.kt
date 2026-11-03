@@ -15,11 +15,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -55,33 +56,44 @@ import com.samuelcruz.bangtinnha.core.work.WorkScheduler
 import com.samuelcruz.bangtinnha.weather.Place
 import kotlinx.coroutines.launch
 
+private data class SettingsEntry(val emoji: String, val colors: ModuleColors, val title: String, val subtitle: String, val route: String)
+
 @Composable
 fun SettingsScreen(onBack: () -> Unit, onOpen: (String) -> Unit) {
     val settings by appContainer().settings.settings.collectAsStateWithLifecycle(AppSettings())
+    val violet = Palette.settings
     val entries = listOf(
-        Triple("Địa điểm thời tiết", settings.locationName, Routes.LOCATION),
-        Triple("Ngoại tệ hiển thị", settings.currencies.sorted().joinToString(), Routes.CURRENCIES),
-        Triple("Xăng dầu hiển thị", if (settings.fuelProducts.isEmpty()) "Tất cả" else "${settings.fuelProducts.size} mặt hàng", Routes.FUEL_PRODUCTS),
-        Triple(
-            "Khu vực cúp điện",
-            "${settings.powerUnits.size} điện lực · ${settings.powerKeywords.size} từ khoá",
-            Routes.POWER_AREA,
+        SettingsEntry("📍", Palette.weather(1, 12), "Địa điểm thời tiết", settings.locationName, Routes.LOCATION),
+        SettingsEntry("💱", Palette.fx, "Ngoại tệ hiển thị", settings.currencies.sorted().joinToString(), Routes.CURRENCIES),
+        SettingsEntry(
+            "⛽", Palette.fuel, "Xăng dầu hiển thị",
+            if (settings.fuelProducts.isEmpty()) "Tất cả mặt hàng" else "${settings.fuelProducts.size} mặt hàng", Routes.FUEL_PRODUCTS,
         ),
-        Triple("Thông báo", "Bản tin sáng lúc %02d:%02d".format(settings.morningHour, settings.morningMinute), Routes.NOTIFICATIONS),
-        Triple("Chạy nền & tối ưu pin", "Để app tự cập nhật và báo đúng giờ", Routes.BATTERY),
-        Triple("Trạng thái nguồn", "Lần tải gần nhất, lỗi chi tiết", Routes.STATUS),
-        Triple("Sao lưu & khôi phục", "Xuất/nhập file database", Routes.BACKUP),
+        SettingsEntry(
+            "⚡", Palette.power, "Khu vực cúp điện",
+            "${settings.powerUnits.size} điện lực · ${settings.powerKeywords.size} từ khoá", Routes.POWER_AREA,
+        ),
+        SettingsEntry("🔔", violet, "Thông báo", "Bản tin sáng lúc %02d:%02d".format(settings.morningHour, settings.morningMinute), Routes.NOTIFICATIONS),
+        SettingsEntry("🔋", ModuleColors(Palette.ok, Palette.fx.end, Palette.ok), "Chạy nền & tối ưu pin", "Để app tự cập nhật và báo đúng giờ", Routes.BATTERY),
+        SettingsEntry("🩺", ModuleColors(Palette.warn, Palette.fuel.end, Palette.warn), "Trạng thái nguồn", "Lần tải gần nhất, lỗi chi tiết", Routes.STATUS),
+        SettingsEntry("💾", violet, "Sao lưu & khôi phục", "Xuất / nhập file database", Routes.BACKUP),
     )
-    SubScreen("Cài đặt", onBack) { modifier ->
-        LazyColumn(modifier) {
-            items(entries) { (title, subtitle, route) ->
-                ListItem(
-                    headlineContent = { Text(title) },
-                    supportingContent = { Text(subtitle) },
-                    modifier = Modifier.clickable { onOpen(route) },
-                )
-                HorizontalDivider()
+    SubScreen("Cài đặt", onBack, subtitle = "Bảng Tin Nhà 1.0") { modifier ->
+        LazyColumn(modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            items(entries) { e ->
+                Tile(Modifier.clip(RoundedCornerShape(20.dp)).clickable { onOpen(e.route) }) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconBubble(e.emoji, e.colors, size = 40)
+                        Spacer(Modifier.padding(start = 12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(e.title, style = MaterialTheme.typography.titleSmall)
+                            Text(e.subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                        }
+                        Text("›", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
             }
+            item { Spacer(Modifier.padding(bottom = 32.dp)) }
         }
     }
 }
@@ -264,10 +276,9 @@ fun BatteryScreen(onBack: () -> Unit) {
                 "App tự cập nhật mỗi giờ và gửi bản tin sáng bằng WorkManager. Android (nhất là Xiaomi, Oppo, Vivo, Samsung) " +
                     "hay dừng các app chạy nền để tiết kiệm pin, làm thông báo đến trễ hoặc không đến.",
             )
-            Card(Modifier.fillMaxWidth()) {
+            Tile {
                 Text(
                     if (ignoring) "✅ App đã được bỏ qua tối ưu pin." else "⚠ App đang bị tối ưu pin: cập nhật nền có thể bị hoãn.",
-                    modifier = Modifier.padding(16.dp),
                     fontWeight = FontWeight.Bold,
                 )
             }
@@ -298,8 +309,8 @@ fun SourceStatusScreen(onBack: () -> Unit) {
         LazyColumn(modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             items(c.coordinator.sources) { source ->
                 val st = byId[source.id]
-                Card(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(12.dp)) {
+                Tile {
+                    Column {
                         Text(source.title, fontWeight = FontWeight.Bold)
                         Text("Chu kỳ: ${source.refreshInterval.inWholeHours} giờ", style = MaterialTheme.typography.bodySmall)
                         Text(
