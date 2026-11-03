@@ -10,6 +10,7 @@ import com.samuelcruz.bangtinnha.core.settings.SettingsRepository
 import com.samuelcruz.bangtinnha.core.source.RefreshCoordinator
 import com.samuelcruz.bangtinnha.fuel.FuelSource
 import com.samuelcruz.bangtinnha.fx.FxSource
+import com.samuelcruz.bangtinnha.gold.GoldSource
 import com.samuelcruz.bangtinnha.power.PowerSource
 import com.samuelcruz.bangtinnha.weather.WeatherSource
 import com.samuelcruz.bangtinnha.widget.updateDashboardWidgets
@@ -30,6 +31,7 @@ class AppContainer(context: Context) {
     val fx = FxSource(http, database.fxDao())
     val fuel = FuelSource(http, database.fuelDao())
     val power = PowerSource(http, settings, database.powerDao())
+    val gold = GoldSource(http, database.goldDao())
 
     val alerts = Alerts(
         settings,
@@ -42,7 +44,7 @@ class AppContainer(context: Context) {
 
     /** Register new data sources here. */
     val coordinator = RefreshCoordinator(
-        sources = listOf(weather, fx, fuel, power),
+        sources = listOf(weather, fx, gold, fuel, power),
         statusDao = database.sourceStatusDao(),
         afterRefresh = {
             alerts.checkUrgent()

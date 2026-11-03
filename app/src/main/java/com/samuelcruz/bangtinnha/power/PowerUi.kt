@@ -3,6 +3,7 @@ package com.samuelcruz.bangtinnha.power
 import androidx.compose.foundation.clickable
 import com.samuelcruz.bangtinnha.ui.Tile
 import com.samuelcruz.bangtinnha.ui.Palette
+import com.samuelcruz.bangtinnha.ui.Pill
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
@@ -51,13 +52,32 @@ import com.samuelcruz.bangtinnha.ui.SubScreen
 import com.samuelcruz.bangtinnha.ui.appContainer
 import kotlinx.coroutines.launch
 import java.time.Instant
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 private val weekdays = listOf("thứ Hai", "thứ Ba", "thứ Tư", "thứ Năm", "thứ Sáu", "thứ Bảy", "Chủ nhật")
 
 /** "08:00–17:00 · thứ Tư 04/11". */
-private fun PowerOutage.timeText(): String {
+private fun PowerOutage.timeText(): String = "${hoursText()} · ${dayText()}"
+
+/** "08:00–17:00". */
+private fun PowerOutage.hoursText(): String = "${formatTime(startAt, "HH:mm")}–${formatTime(endAt, "HH:mm")}"
+
+/** "thứ Tư 04/11". */
+private fun PowerOutage.dayText(): String {
     val day = Instant.ofEpochMilli(startAt).atZone(VN_ZONE).dayOfWeek.value
-    return "${formatTime(startAt, "HH:mm")}–${formatTime(endAt, "HH:mm")} · ${weekdays[day - 1]} ${formatTime(startAt, "dd/MM")}"
+    return "${weekdays[day - 1]} ${formatTime(startAt, "dd/MM")}"
+}
+
+/** "Hôm nay", "Ngày mai", "Còn 3 ngày". */
+private fun PowerOutage.countdown(): String {
+    val today = LocalDate.now(VN_ZONE)
+    val day = Instant.ofEpochMilli(startAt).atZone(VN_ZONE).toLocalDate()
+    return when (val n = ChronoUnit.DAYS.between(today, day)) {
+        0L -> "Hôm nay"
+        1L -> "Ngày mai"
+        else -> "Còn $n ngày"
+    }
 }
 
 @Composable
@@ -80,16 +100,20 @@ fun PowerCardContent() {
             Column(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Palette.power.gradient).padding(16.dp),
             ) {
-                Text("SẮP CÚP ĐIỆN", color = Color.White.copy(alpha = 0.85f), style = MaterialTheme.typography.labelMedium)
-                Text(next.timeText(), color = Color.White, style = MaterialTheme.typography.titleLarge)
-                Text(next.area.lines().first(), color = Color.White, style = MaterialTheme.typography.bodyMedium, maxLines = 2)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("SẮP CÚP ĐIỆN", color = Color.White.copy(alpha = 0.85f), style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
+                    Pill(next.countdown(), Color.White.copy(alpha = 0.22f), Color.White)
+                }
+                Text(next.hoursText(), color = Color.White, style = MaterialTheme.typography.headlineMedium)
+                Text(next.dayText().replaceFirstChar { it.uppercase() }, color = Color.White, style = MaterialTheme.typography.titleSmall)
+                Text("📍 " + next.area.lines().first(), color = Color.White.copy(alpha = 0.9f), style = MaterialTheme.typography.bodyMedium, maxLines = 2, modifier = Modifier.padding(top = 6.dp))
             }
             if (mine.size > 1) {
-                Text(
-                    "và ${mine.size - 1} lịch khác",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = Palette.power.accent,
-                    modifier = Modifier.padding(top = 10.dp, start = 4.dp),
+                Pill(
+                    "Xem thêm ${mine.size - 1} lịch ›",
+                    Palette.power.accent.copy(alpha = 0.15f),
+                    Palette.power.accent,
+                    modifier = Modifier.padding(top = 10.dp),
                 )
             }
         }

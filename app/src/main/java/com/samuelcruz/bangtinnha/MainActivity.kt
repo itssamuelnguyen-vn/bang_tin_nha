@@ -15,6 +15,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.samuelcruz.bangtinnha.fuel.FuelDetailScreen
 import com.samuelcruz.bangtinnha.fx.FxDetailScreen
+import com.samuelcruz.bangtinnha.gold.GoldDetailScreen
 import com.samuelcruz.bangtinnha.power.PowerDetailScreen
 import com.samuelcruz.bangtinnha.power.PowerSettingsScreen
 import com.samuelcruz.bangtinnha.ui.BackupScreen
@@ -22,6 +23,7 @@ import com.samuelcruz.bangtinnha.ui.BangTinNhaTheme
 import com.samuelcruz.bangtinnha.ui.BatteryScreen
 import com.samuelcruz.bangtinnha.ui.CurrenciesScreen
 import com.samuelcruz.bangtinnha.ui.FuelProductsScreen
+import com.samuelcruz.bangtinnha.ui.GoldProductsScreen
 import com.samuelcruz.bangtinnha.ui.HomeScreen
 import com.samuelcruz.bangtinnha.ui.LocationScreen
 import com.samuelcruz.bangtinnha.ui.NotificationsScreen
@@ -71,6 +73,8 @@ private fun AppNavigation() {
         composable(Routes.FX) { FxDetailScreen(back) }
         composable(Routes.FUEL) { FuelDetailScreen(back) }
         composable(Routes.POWER) { PowerDetailScreen(back) }
+        composable(Routes.GOLD) { GoldDetailScreen(back) }
+        composable(Routes.GOLD_PRODUCTS) { GoldProductsScreen(back) }
         composable(Routes.SETTINGS) { SettingsScreen(back, open) }
         composable(Routes.LOCATION) { LocationScreen(back) }
         composable(Routes.CURRENCIES) { CurrenciesScreen(back) }

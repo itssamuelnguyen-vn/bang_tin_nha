@@ -34,8 +34,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.samuelcruz.bangtinnha.core.VN_ZONE
+import com.samuelcruz.bangtinnha.core.lunar.LunarCalendar
 import com.samuelcruz.bangtinnha.fuel.FuelCardContent
 import com.samuelcruz.bangtinnha.fx.FxCardContent
+import com.samuelcruz.bangtinnha.gold.GoldCardContent
 import com.samuelcruz.bangtinnha.power.PowerCardContent
 import com.samuelcruz.bangtinnha.weather.WeatherHero
 import kotlinx.coroutines.launch
@@ -80,6 +82,11 @@ fun HomeScreen(onOpen: (String) -> Unit) {
                 }
             }
             item {
+                ModuleCard("🥇", "Giá vàng PNJ", Palette.gold, status["gold"], c.gold.refreshInterval, { onOpen(Routes.GOLD) }) {
+                    GoldCardContent()
+                }
+            }
+            item {
                 ModuleCard("⛽", "Giá xăng dầu", Palette.fuel, status["fuel"], c.fuel.refreshInterval, { onOpen(Routes.FUEL) }) {
                     FuelCardContent()
                 }
@@ -115,7 +122,8 @@ private fun Greeting(onSettings: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp, start = 4.dp)) {
         Column(Modifier.weight(1f)) {
             Text(
-                "${weekdays[now.dayOfWeek.value - 1]}, %02d/%02d/%d".format(now.dayOfMonth, now.monthValue, now.year),
+                "${weekdays[now.dayOfWeek.value - 1]}, %02d/%02d/%d".format(now.dayOfMonth, now.monthValue, now.year) +
+                    LunarCalendar.solarToLunar(now.dayOfMonth, now.monthValue, now.year).let { " · ${it.day}/${it.month}${if (it.leap) "N" else ""} âm" },
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
             )
@@ -134,6 +142,8 @@ object Routes {
     const val FX = "fx"
     const val FUEL = "fuel"
     const val POWER = "power"
+    const val GOLD = "gold"
+    const val GOLD_PRODUCTS = "settings/gold"
     const val SETTINGS = "settings"
     const val LOCATION = "settings/location"
     const val CURRENCIES = "settings/currencies"

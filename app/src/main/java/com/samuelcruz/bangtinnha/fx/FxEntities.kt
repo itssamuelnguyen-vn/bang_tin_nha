@@ -37,6 +37,8 @@ data class FxLatest(
     val sell: Long?,
     val fetchedAt: Long,
     val sourceTime: Long?,
+    /** Sell price of the row before the latest, for the ▲/▼ badge. */
+    val previousSell: Long?,
 )
 
 @Dao
@@ -55,7 +57,8 @@ interface FxDao {
 
     @Query(
         """
-        SELECT c.code, c.name, r.buyCash, r.buyTransfer, r.sell, r.fetchedAt, r.sourceTime
+        SELECT c.code, c.name, r.buyCash, r.buyTransfer, r.sell, r.fetchedAt, r.sourceTime,
+          (SELECT sell FROM fx_rate WHERE currencyId = c.id ORDER BY fetchedAt DESC LIMIT 1 OFFSET 1) AS previousSell
         FROM currency c JOIN fx_rate r
           ON r.id = (SELECT id FROM fx_rate WHERE currencyId = c.id ORDER BY fetchedAt DESC LIMIT 1)
         ORDER BY c.code

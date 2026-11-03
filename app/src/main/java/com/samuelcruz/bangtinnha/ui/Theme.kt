@@ -85,6 +85,7 @@ data class ModuleColors(val start: Color, val end: Color, val accent: Color) {
 object Palette {
     val fx = ModuleColors(Color(0xFF00C9A7), Color(0xFF00B4D8), Color(0xFF00A88E))
     val fuel = ModuleColors(Color(0xFFFF9F43), Color(0xFFFF6B6B), Color(0xFFF2711C))
+    val gold = ModuleColors(Color(0xFFF9D423), Color(0xFFF7971E), Color(0xFFE08E00))
     val power = ModuleColors(Color(0xFF7B61FF), Color(0xFFB06AB3), Color(0xFF7B61FF))
     val settings = ModuleColors(Color(0xFF6C5CE7), Color(0xFF8E7CFF), Color(0xFF6C5CE7))
     val up = Color(0xFFE84357)

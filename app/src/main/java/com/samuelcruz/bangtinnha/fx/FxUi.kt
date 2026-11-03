@@ -32,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.samuelcruz.bangtinnha.core.formatHundredths
 import com.samuelcruz.bangtinnha.core.formatTime
 import com.samuelcruz.bangtinnha.core.settings.AppSettings
+import com.samuelcruz.bangtinnha.ui.ChangeBadge
 import com.samuelcruz.bangtinnha.ui.Palette
 import com.samuelcruz.bangtinnha.ui.PriceHistoryChart
 import com.samuelcruz.bangtinnha.ui.SectionTitle
@@ -69,6 +70,7 @@ fun FxCardContent() {
         Column(horizontalAlignment = Alignment.End) {
             Text("Bán ra", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(price(main.sell), style = MaterialTheme.typography.headlineSmall, color = Palette.fx.accent)
+            ChangeBadge(main.sell, main.previousSell, ::formatHundredths)
         }
     }
     shown.filter { it != main }.forEach { r ->
@@ -76,6 +78,8 @@ fun FxCardContent() {
             Text(flagOf(r.code), fontSize = 20.sp)
             Spacer(Modifier.width(10.dp))
             Text(r.code, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+            ChangeBadge(r.sell, r.previousSell, ::formatHundredths)
+            Spacer(Modifier.width(8.dp))
             Text(price(r.sell), style = MaterialTheme.typography.titleSmall)
         }
     }
@@ -105,7 +109,10 @@ fun FxDetailScreen(onBack: () -> Unit) {
                             Text(r.code, style = MaterialTheme.typography.titleMedium)
                             Text(r.name.lowercase().replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        Text(price(r.sell), style = MaterialTheme.typography.titleLarge, color = Palette.fx.accent)
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(price(r.sell), style = MaterialTheme.typography.titleLarge, color = Palette.fx.accent)
+                            ChangeBadge(r.sell, r.previousSell, ::formatHundredths)
+                        }
                     }
                     Row(Modifier.fillMaxWidth().padding(top = 6.dp)) {
                         Text("Mua TM ${price(r.buyCash)}", style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))

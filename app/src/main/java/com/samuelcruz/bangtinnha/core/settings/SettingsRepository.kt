@@ -28,12 +28,15 @@ data class AppSettings(
     val currencies: Set<String> = setOf("USD", "EUR", "JPY", "CNY", "KRW"),
     /** Petrolimex product ids to show; empty means all. */
     val fuelProducts: Set<String> = emptySet(),
+    /** PNJ gold codes to show. */
+    val goldProducts: Set<String> = setOf("SJC", "N24K"),
     val powerCompany: String = "PB05",
     val powerUnits: List<PowerUnit> = listOf(PowerUnit("PB0501", "Điện lực Tân Ninh")),
     val powerKeywords: List<String> = emptyList(),
     val notifyMorning: Boolean = true,
     val notifyPower: Boolean = true,
     val notifyFuel: Boolean = true,
+    val notifyWeather: Boolean = true,
     val morningHour: Int = 6,
     val morningMinute: Int = 30,
     val lastVacuumAt: Long = 0,
@@ -47,12 +50,14 @@ class SettingsRepository(private val context: Context) {
         val longitude = doublePreferencesKey("longitude")
         val currencies = stringSetPreferencesKey("currencies")
         val fuelProducts = stringSetPreferencesKey("fuel_products")
+        val goldProducts = stringSetPreferencesKey("gold_products")
         val powerCompany = stringPreferencesKey("power_company")
         val powerUnits = stringSetPreferencesKey("power_units") // "code|name"
         val powerKeywords = stringPreferencesKey("power_keywords") // one per line
         val notifyMorning = booleanPreferencesKey("notify_morning")
         val notifyPower = booleanPreferencesKey("notify_power")
         val notifyFuel = booleanPreferencesKey("notify_fuel")
+        val notifyWeather = booleanPreferencesKey("notify_weather")
         val morningHour = intPreferencesKey("morning_hour")
         val morningMinute = intPreferencesKey("morning_minute")
         val lastVacuumAt = longPreferencesKey("last_vacuum_at")
@@ -66,6 +71,7 @@ class SettingsRepository(private val context: Context) {
             longitude = p[Keys.longitude] ?: d.longitude,
             currencies = p[Keys.currencies] ?: d.currencies,
             fuelProducts = p[Keys.fuelProducts] ?: d.fuelProducts,
+            goldProducts = p[Keys.goldProducts] ?: d.goldProducts,
             powerCompany = p[Keys.powerCompany] ?: d.powerCompany,
             powerUnits = p[Keys.powerUnits]
                 ?.map { PowerUnit(it.substringBefore('|'), it.substringAfter('|')) }
@@ -76,6 +82,7 @@ class SettingsRepository(private val context: Context) {
             notifyMorning = p[Keys.notifyMorning] ?: d.notifyMorning,
             notifyPower = p[Keys.notifyPower] ?: d.notifyPower,
             notifyFuel = p[Keys.notifyFuel] ?: d.notifyFuel,
+            notifyWeather = p[Keys.notifyWeather] ?: d.notifyWeather,
             morningHour = p[Keys.morningHour] ?: d.morningHour,
             morningMinute = p[Keys.morningMinute] ?: d.morningMinute,
             lastVacuumAt = p[Keys.lastVacuumAt] ?: d.lastVacuumAt,
@@ -94,6 +101,8 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setFuelProducts(ids: Set<String>) = context.dataStore.edit { it[Keys.fuelProducts] = ids }
 
+    suspend fun setGoldProducts(codes: Set<String>) = context.dataStore.edit { it[Keys.goldProducts] = codes }
+
     suspend fun setPowerCompany(code: String) = context.dataStore.edit {
         it[Keys.powerCompany] = code
         it[Keys.powerUnits] = emptySet()
@@ -110,6 +119,8 @@ class SettingsRepository(private val context: Context) {
     suspend fun setNotifyPower(on: Boolean) = context.dataStore.edit { it[Keys.notifyPower] = on }
 
     suspend fun setNotifyFuel(on: Boolean) = context.dataStore.edit { it[Keys.notifyFuel] = on }
+
+    suspend fun setNotifyWeather(on: Boolean) = context.dataStore.edit { it[Keys.notifyWeather] = on }
 
     suspend fun setMorningTime(hour: Int, minute: Int) = context.dataStore.edit {
         it[Keys.morningHour] = hour

@@ -61,6 +61,9 @@ interface WeatherDao {
     @Query("SELECT * FROM weather_hourly ORDER BY time")
     fun observeHourly(): Flow<List<WeatherHourly>>
 
+    @Query("SELECT * FROM weather_hourly ORDER BY time")
+    suspend fun hourly(): List<WeatherHourly>
+
     @Query("DELETE FROM weather_daily")
     suspend fun clearDaily()
 

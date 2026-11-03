@@ -40,6 +40,7 @@ import com.samuelcruz.bangtinnha.ui.SectionTitle
 import com.samuelcruz.bangtinnha.ui.SubScreen
 import com.samuelcruz.bangtinnha.ui.Tile
 import com.samuelcruz.bangtinnha.ui.appContainer
+import com.samuelcruz.bangtinnha.ui.fadeEnd
 import com.samuelcruz.bangtinnha.ui.freshness
 import java.time.LocalDate
 import kotlin.time.Duration
@@ -102,9 +103,12 @@ fun WeatherHero(status: SourceStatus?, interval: Duration, onClick: () -> Unit) 
                 Stat("💧", today?.rainProbability?.let { "$it%" } ?: "${w.humidity}%", Modifier.weight(1f))
                 w.usAqi?.let { Stat("🍃", "AQI $it", Modifier.weight(1f), dot = aqiLevel(it).color) }
             }
+            if (hourly.isNotEmpty()) {
+                Text(rainSummary(hourly), color = white, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 14.dp))
+            }
             if (hourly.size > 1) {
                 Row(
-                    Modifier.padding(top = 14.dp).horizontalScroll(rememberScrollState()),
+                    Modifier.padding(top = 10.dp).fadeEnd().horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     hourly.drop(1).take(8).forEach { h ->

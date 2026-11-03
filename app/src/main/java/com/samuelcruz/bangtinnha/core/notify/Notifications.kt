@@ -18,6 +18,7 @@ enum class Channel(val id: String, val title: String, val importance: Int) {
     MORNING("morning", "Bản tin buổi sáng", NotificationManager.IMPORTANCE_DEFAULT),
     POWER("power", "Cúp điện", NotificationManager.IMPORTANCE_HIGH),
     FUEL("fuel", "Giá xăng", NotificationManager.IMPORTANCE_DEFAULT),
+    WEATHER("weather", "Thời tiết xấu", NotificationManager.IMPORTANCE_HIGH),
 }
 
 class Notifications(private val context: Context) {

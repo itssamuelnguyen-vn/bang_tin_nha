@@ -29,7 +29,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -184,3 +190,26 @@ fun Tile(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
         modifier = modifier.fillMaxWidth(),
     ) { Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) { content() } }
 }
+
+/** "▲ 300" in red or "▼ 300" in green when [current] differs from [previous]; nothing when unchanged. */
+@Composable
+fun ChangeBadge(current: Long?, previous: Long?, format: (Long) -> String) {
+    if (current == null || previous == null || current == previous) return
+    val diff = current - previous
+    if (diff > 0) {
+        Text("▲ ${format(diff)}", color = Palette.up, style = MaterialTheme.typography.labelMedium)
+    } else {
+        Text("▼ ${format(-diff)}", color = Palette.down, style = MaterialTheme.typography.labelMedium)
+    }
+}
+
+/** Fades the right edge of a horizontally scrolling row, hinting that there is more to swipe. */
+fun Modifier.fadeEnd(width: Dp = 40.dp): Modifier = this
+    .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+    .drawWithContent {
+        drawContent()
+        drawRect(
+            Brush.horizontalGradient(0f to Color.Black, 1f to Color.Transparent, startX = size.width - width.toPx(), endX = size.width),
+            blendMode = BlendMode.DstIn,
+        )
+    }

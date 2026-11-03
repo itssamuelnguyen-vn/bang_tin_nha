@@ -65,6 +65,7 @@ fun SettingsScreen(onBack: () -> Unit, onOpen: (String) -> Unit) {
     val entries = listOf(
         SettingsEntry("📍", Palette.weather(1, 12), "Địa điểm thời tiết", settings.locationName, Routes.LOCATION),
         SettingsEntry("💱", Palette.fx, "Ngoại tệ hiển thị", settings.currencies.sorted().joinToString(), Routes.CURRENCIES),
+        SettingsEntry("🥇", Palette.gold, "Vàng hiển thị", "${settings.goldProducts.size} loại", Routes.GOLD_PRODUCTS),
         SettingsEntry(
             "⛽", Palette.fuel, "Xăng dầu hiển thị",
             if (settings.fuelProducts.isEmpty()) "Tất cả mặt hàng" else "${settings.fuelProducts.size} mặt hàng", Routes.FUEL_PRODUCTS,
@@ -78,7 +79,7 @@ fun SettingsScreen(onBack: () -> Unit, onOpen: (String) -> Unit) {
         SettingsEntry("🩺", ModuleColors(Palette.warn, Palette.fuel.end, Palette.warn), "Trạng thái nguồn", "Lần tải gần nhất, lỗi chi tiết", Routes.STATUS),
         SettingsEntry("💾", violet, "Sao lưu & khôi phục", "Xuất / nhập file database", Routes.BACKUP),
     )
-    SubScreen("Cài đặt", onBack, subtitle = "Bảng Tin Nhà 1.0") { modifier ->
+    SubScreen("Cài đặt", onBack, subtitle = "Bảng Tin Nhà 1.2") { modifier ->
         LazyColumn(modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             items(entries) { e ->
                 Tile(Modifier.clip(RoundedCornerShape(20.dp)).clickable { onOpen(e.route) }) {
@@ -194,6 +195,20 @@ fun FuelProductsScreen(onBack: () -> Unit) {
     }
 }
 
+@Composable
+fun GoldProductsScreen(onBack: () -> Unit) {
+    val c = appContainer()
+    val scope = rememberCoroutineScope()
+    val settings by c.settings.settings.collectAsStateWithLifecycle(AppSettings())
+    val products by c.database.goldDao().observeProducts().collectAsStateWithLifecycle(emptyList())
+    SubScreen("Vàng hiển thị", onBack, Palette.gold) { modifier ->
+        Column(modifier) {
+            if (products.isEmpty()) Text("Danh sách loại vàng sẽ có sau lần tải giá đầu tiên.", Modifier.padding(16.dp))
+            CheckList(products.map { it.code to it.name }, settings.goldProducts) { scope.launch { c.settings.setGoldProducts(it) } }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationsScreen(onBack: () -> Unit) {
@@ -230,6 +245,7 @@ fun NotificationsScreen(onBack: () -> Unit) {
                 c.settings.setNotifyPower(it)
             }
             Toggle("Giá xăng", "Báo khi giá xăng dầu thay đổi", s.notifyFuel) { c.settings.setNotifyFuel(it) }
+            Toggle("Thời tiết xấu", "Báo khi sắp có dông hoặc mưa to trong 6 giờ tới", s.notifyWeather) { c.settings.setNotifyWeather(it) }
         }
     }
     if (picking) {

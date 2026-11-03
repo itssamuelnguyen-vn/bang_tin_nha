@@ -32,3 +32,28 @@ fun aqiLevel(aqi: Int): AqiLevel = when {
     aqi <= 300 -> AqiLevel("Rất xấu", Color(0xFF6A1B9A))
     else -> AqiLevel("Nguy hại", Color(0xFF4E0D0D))
 }
+
+/** WMO codes worth a warning: heavy rain, violent showers, thunderstorms. */
+val SEVERE_CODES = setOf(65, 67, 82, 95, 96, 99)
+
+private fun WeatherHourly.isWet() = weatherCode >= 51 || (rainProbability ?: 0) >= 60
+
+private fun WeatherHourly.hour() = time.substring(11, 13).toInt()
+
+/**
+ * One line about rain in the next 12 hours ([next] starts at the current hour): "🌧️ Có thể mưa khoảng 16h–19h",
+ * "⛈️ Có dông khoảng …", "🌧️ Đang mưa, đến khoảng 18h" or "🌤️ 12 giờ tới ít khả năng mưa".
+ */
+fun rainSummary(next: List<WeatherHourly>): String {
+    val window = next.take(12)
+    val first = window.indexOfFirst { it.isWet() }
+    if (first < 0) return "🌤️ 12 giờ tới ít khả năng mưa"
+    var last = first
+    while (last + 1 < window.size && window[last + 1].isWet()) last++
+    val storm = window.subList(first, last + 1).any { it.weatherCode >= 95 }
+    val end = (window[last].hour() + 1) % 24
+    return when {
+        first == 0 -> (if (storm) "⛈️ Đang có dông" else "🌧️ Đang mưa") + ", đến khoảng ${end}h"
+        else -> (if (storm) "⛈️ Có dông" else "🌧️ Có thể mưa") + " khoảng ${window[first].hour()}h–${end}h"
+    }
+}

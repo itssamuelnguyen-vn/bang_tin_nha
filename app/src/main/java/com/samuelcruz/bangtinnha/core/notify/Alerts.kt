@@ -12,8 +12,10 @@ import com.samuelcruz.bangtinnha.fuel.FuelDao
 import com.samuelcruz.bangtinnha.fuel.FuelLatest
 import com.samuelcruz.bangtinnha.power.PowerDao
 import com.samuelcruz.bangtinnha.power.PowerOutage
+import com.samuelcruz.bangtinnha.weather.SEVERE_CODES
 import com.samuelcruz.bangtinnha.weather.WeatherDao
 import com.samuelcruz.bangtinnha.weather.aqiLevel
+import com.samuelcruz.bangtinnha.weather.rainSummary
 import com.samuelcruz.bangtinnha.weather.weatherOf
 import java.time.LocalDate
 
@@ -81,6 +83,25 @@ class Alerts(
                 changed.forEach { log.markSent(NotificationLog("fuel:${it.priceId}", t)) }
             }
         }
+        if (s.notifyWeather) {
+            // The next 6 hours (hourly rows start at the current hour). One alert per 6-hour block.
+            val severe = weather.hourly().take(6).filter { it.weatherCode in SEVERE_CODES }
+            val first = severe.firstOrNull()
+            if (first != null) {
+                val hour = first.time.substring(11, 13).toInt()
+                val key = "weather:${first.time.take(10)}:${hour / 6}"
+                if (!log.wasSent(key)) {
+                    val (emoji, text) = weatherOf(first.weatherCode)
+                    notifications.post(
+                        Channel.WEATHER,
+                        NOTIFY_WEATHER,
+                        "$emoji $text sắp tới · ${s.locationName}",
+                        listOf("Khoảng ${hour}h–${severe.last().time.substring(11, 13).toInt() + 1}h. Nhớ mang áo mưa, cất đồ phơi ngoài trời nhé!"),
+                    )
+                    log.markSent(NotificationLog(key, t))
+                }
+            }
+        }
         log.deleteOlderThan(t - 90 * DAY)
     }
 
@@ -102,6 +123,7 @@ class Alerts(
             val (emoji, text) = weatherOf(d.weatherCode)
             add("$emoji $text, ${d.tempMin.toInt()}–${d.tempMax.toInt()}°C" + (d.rainProbability?.let { ", mưa $it%" } ?: ""))
         }
+        weather.hourly().takeIf { it.isNotEmpty() }?.let { add(rainSummary(it)) }
         weather.current()?.usAqi?.let { add("Không khí: AQI $it (${aqiLevel(it).label})") }
         power.upcoming(t).forMyArea(s, t).filter { it.startAt <= t + 2 * DAY }.take(3).forEach {
             add("⚡ Cúp điện ${formatTime(it.startAt, "HH:mm dd/MM")}–${formatTime(it.endAt, "HH:mm")}: ${it.area.lines().first()}")
@@ -118,5 +140,6 @@ class Alerts(
         const val NOTIFY_MORNING = 1
         const val NOTIFY_POWER = 2
         const val NOTIFY_FUEL = 3
+        const val NOTIFY_WEATHER = 4
     }
 }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,8 +34,8 @@ import com.samuelcruz.bangtinnha.core.formatDong
 import com.samuelcruz.bangtinnha.core.formatTime
 import com.samuelcruz.bangtinnha.core.notify.chosen
 import com.samuelcruz.bangtinnha.core.settings.AppSettings
+import com.samuelcruz.bangtinnha.ui.ChangeBadge
 import com.samuelcruz.bangtinnha.ui.Palette
-import com.samuelcruz.bangtinnha.ui.Pill
 import com.samuelcruz.bangtinnha.ui.PriceHistoryChart
 import com.samuelcruz.bangtinnha.ui.SectionTitle
 import com.samuelcruz.bangtinnha.ui.SubScreen
@@ -52,27 +53,16 @@ private fun dotColor(name: String): Color = when {
     else -> Color(0xFFB07D5B)
 }
 
-/** "▲300" (red), "▼300" (green) or "Giữ giá" (grey) versus the previous price. */
-@Composable
-private fun ChangePill(p: FuelLatest) {
-    val price = p.price ?: return
-    val diff = p.previousPrice?.let { price - it } ?: 0
-    when {
-        diff > 0 -> Pill("▲ ${formatDong(diff)}", Palette.up.copy(alpha = 0.15f), Palette.up)
-        diff < 0 -> Pill("▼ ${formatDong(-diff)}", Palette.down.copy(alpha = 0.15f), Palette.down)
-        else -> Pill("Giữ giá", MaterialTheme.colorScheme.surfaceContainerHigh, MaterialTheme.colorScheme.onSurfaceVariant)
-    }
-}
-
 @Composable
 private fun FuelRow(p: FuelLatest) {
     Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.size(10.dp).clip(CircleShape).background(dotColor(p.name)))
         Spacer(Modifier.width(10.dp))
         Text(p.name, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-        ChangePill(p)
-        Spacer(Modifier.width(10.dp))
-        Text(p.price?.let { "${formatDong(it)}đ" } ?: "–", style = MaterialTheme.typography.titleMedium)
+        Column(horizontalAlignment = Alignment.End) {
+            Text(p.price?.let { "${formatDong(it)}đ" } ?: "–", style = MaterialTheme.typography.titleMedium)
+            ChangeBadge(p.price, p.previousPrice, ::formatDong)
+        }
     }
 }
 
@@ -84,9 +74,10 @@ fun FuelCardContent() {
     val shown = latest.chosen(settings)
     if (shown.isEmpty()) return Text("Chưa có dữ liệu giá xăng", style = MaterialTheme.typography.bodyMedium)
     shown.forEach { FuelRow(it) }
+    val anyChange = shown.any { it.previousPrice != null && it.previousPrice != it.price }
     shown.mapNotNull { it.effectiveAt }.maxOrNull()?.let {
         Text(
-            "Giá vùng 1 · áp dụng từ ${formatTime(it, "HH:mm dd/MM")}",
+            (if (anyChange) "" else "Giữ giá so với kỳ trước · ") + "Giá vùng 1 · áp dụng từ ${formatTime(it, "HH:mm dd/MM")}",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 6.dp),
