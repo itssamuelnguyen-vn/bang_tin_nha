@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A house with three "news" lines, white on the blue background colour. 108dp adaptive canvas, art in the
+     middle 66dp safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M54,28 L80,48 L76,48 L76,78 L32,78 L32,48 L28,48 Z" />
+    <path
+        android:fillColor="#FF1E5BB8"
+        android:pathData="M40,54h28v4h-28z M40,62h28v4h-28z M40,70h18v4h-18z" />
+</vector>
