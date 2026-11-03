@@ -19,6 +19,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -52,6 +53,8 @@ fun HomeScreen(onOpen: (String) -> Unit) {
     val scope = rememberCoroutineScope()
     var refreshing by remember { mutableStateOf(false) }
 
+    // Surface gives the screen's text its default colour (onBackground); without it, plain Text is black.
+    Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize()) {
     PullToRefreshBox(
         isRefreshing = refreshing,
         onRefresh = {
@@ -96,6 +99,7 @@ fun HomeScreen(onOpen: (String) -> Unit) {
                 )
             }
         }
+    }
     }
 }
 
