@@ -71,4 +71,14 @@ interface FxDao {
 
     @Query("SELECT code FROM currency ORDER BY code")
     fun observeCodes(): Flow<List<String>>
+
+    /** Keeps only the last rate of each Vietnam day for rows older than [before] (see Maintenance). */
+    @Query(
+        """
+        DELETE FROM fx_rate WHERE fetchedAt < :before AND id NOT IN (
+          SELECT MAX(id) FROM fx_rate WHERE fetchedAt < :before
+          GROUP BY currencyId, (fetchedAt + 25200000) / 86400000)
+        """,
+    )
+    suspend fun thinBefore(before: Long): Int
 }

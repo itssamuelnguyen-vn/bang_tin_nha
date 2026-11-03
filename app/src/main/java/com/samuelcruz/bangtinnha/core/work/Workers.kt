@@ -26,7 +26,7 @@ class RefreshWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         val c = (applicationContext as BangTinNhaApp).container
         c.coordinator.refreshDue()
         c.alerts.checkUrgent()
-        c.maintenance.vacuumIfDue()
+        c.maintenance.monthlyCleanupIfDue()
         return Result.success()
     }
 }

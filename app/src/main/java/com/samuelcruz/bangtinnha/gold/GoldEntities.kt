@@ -64,6 +64,16 @@ interface GoldDao {
     @Query("SELECT * FROM gold_product ORDER BY displayOrder")
     fun observeProducts(): Flow<List<GoldProduct>>
 
+    /** Keeps only the last price of each Vietnam day for rows older than [before] (see Maintenance). */
+    @Query(
+        """
+        DELETE FROM gold_price WHERE fetchedAt < :before AND id NOT IN (
+          SELECT MAX(id) FROM gold_price WHERE fetchedAt < :before
+          GROUP BY productId, (fetchedAt + 25200000) / 86400000)
+        """,
+    )
+    suspend fun thinBefore(before: Long): Int
+
     companion object {
         private const val ORDERED = "FROM gold_price WHERE productId = p.id ORDER BY fetchedAt DESC, id DESC"
         const val LATEST_SQL = """

@@ -11,7 +11,13 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
 
-/** Monthly VACUUM, database size, and export/import of the database file. */
+/**
+ * Monthly clean-up (thinning old prices, VACUUM), database size, and export/import of the database file.
+ *
+ * Exchange rates and gold can change several times a day. Rows older than [KEEP_DETAIL_DAYS] are thinned to the last
+ * price of each day (the daily close), which is all the long-range charts need and keeps the database at well under
+ * 1 MB a year. Fuel changes about weekly, so it is never thinned.
+ */
 class Maintenance(
     private val context: Context,
     private val database: AppDatabase,
@@ -20,9 +26,12 @@ class Maintenance(
 ) {
     private val dbFile: File get() = context.getDatabasePath(AppDatabase.NAME)
 
-    /** Rewrites the database file to give back freed space, about once a month. */
-    suspend fun vacuumIfDue() {
-        if (now() - settings.current().lastVacuumAt < 30L * 24 * 3600 * 1000) return
+    /** About once a month: thins old prices, then rewrites the database file to give back the freed space. */
+    suspend fun monthlyCleanupIfDue() {
+        if (now() - settings.current().lastVacuumAt < 30L * DAY_MS) return
+        val before = now() - KEEP_DETAIL_DAYS * DAY_MS
+        database.fxDao().thinBefore(before)
+        database.goldDao().thinBefore(before)
         withContext(Dispatchers.IO) { database.openHelper.writableDatabase.execSQL("VACUUM") }
         settings.setLastVacuumAt(now())
     }
@@ -51,6 +60,11 @@ class Maintenance(
         File(dbFile.path + "-shm").delete()
         dbFile.writeBytes(bytes)
         restart()
+    }
+
+    companion object {
+        const val KEEP_DETAIL_DAYS = 90L
+        private const val DAY_MS = 24L * 3600 * 1000
     }
 
     private fun restart() {

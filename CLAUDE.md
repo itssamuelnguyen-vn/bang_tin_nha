@@ -32,7 +32,7 @@ minSdk 26. No Hilt: `core/AppContainer.kt` builds every long-lived object.
 ```
 core/        AppContainer, db (AppDatabase, source_status, notification_log), net/Http, source (DataSource,
              RefreshCoordinator), work (RefreshWorker, MorningBriefWorker, WorkScheduler), notify (channels,
-             Alerts), settings (DataStore), text (Vietnamese accent-free matching), backup (VACUUM, export/import),
+             Alerts), settings (DataStore), text (Vietnamese accent-free matching), backup (monthly thinning + VACUUM, export/import),
              lunar (Vietnamese lunar calendar, copied from the amlich_vietnam app with its 303-date test)
 weather/ fx/ gold/ fuel/ power/   one package per source: <X>Source, <X>Parser, entities + DAO, UI (card + detail)
 ui/          theme, home dashboard, settings screens, shared pieces, the only Vico wrapper (HistoryChart.kt)
@@ -62,7 +62,9 @@ widget/      Glance dashboard widget
 - Weather keeps only the current forecast (current row, 7 days, next 48 hours), replaced on each refresh.
 - Power outages: all outages of the chosen units are stored; ended ones are deleted after 3 days; future ones the
   site no longer lists are deleted (cancelled). Area keywords are applied at display/notify time.
-- `Maintenance.vacuumIfDue()` runs `VACUUM` about monthly from `RefreshWorker`.
+- `Maintenance.monthlyCleanupIfDue()` runs about monthly from `RefreshWorker`: `fx_rate` and `gold_price` rows older
+  than 90 days are thinned to the last row of each Vietnam day (daily close), then `VACUUM`. Fuel is never thinned
+  (it changes about weekly).
 - Auto Backup includes the database and DataStore (`res/xml/backup_rules.xml`, `data_extraction_rules.xml`).
   Settings → "Sao lưu & khôi phục" exports/imports the DB file (import checks the SQLite header, then restarts).
 
@@ -109,4 +111,7 @@ isolation and due-ness.
 
 - Ask before adding features outside the agreed list; ask when something is ambiguous.
 - Prefer simple code to patterns. Explain Android limits (background work, permissions, battery) briefly.
-- Phase 8 (remote CSS selectors in a Gist, OHLC roll-up of data older than 90 days) is optional: ask first.
+- Phase 8 (decided 2026-11): the 90-day roll-up is done as daily-close thinning (no schema change, charts unchanged).
+  Remote CSS selectors in a Gist were left out: only EVNSPC is parsed from HTML (the rest are JSON/XML APIs), and a
+  remote config would add a network dependency and a way to break parsing from outside the app. Revisit only if
+  EVNSPC markup changes often.
